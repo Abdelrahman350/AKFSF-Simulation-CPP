@@ -69,13 +69,13 @@ void KalmanFilter::predictionStep(double dt)
         Q(0, 0) = ACCEL_STD * ACCEL_STD;
         Q(1, 1) = ACCEL_STD * ACCEL_STD;
 
-        MatrixXd L = MatrixXd(4, 2);
+        MatrixXd L = MatrixXd::Zero(4, 2);
         L(0, 0) = 0.5*dt*dt;
         L(1, 1) = 0.5*dt*dt;
         L(2, 0) = dt;
         L(3, 1) = dt;
 
-        state = L * state;
+        state = F * state;
         cov = F * cov * F.transpose() + L * Q * L.transpose();
         // ----------------------------------------------------------------------- //
 
