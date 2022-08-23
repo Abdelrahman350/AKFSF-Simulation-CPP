@@ -35,7 +35,12 @@ void KalmanFilter::predictionStep(double dt)
 
             // Assume the initial position is (X,Y) = (0,0) m
             // Assume the initial velocity is 5 m/s at 45 degrees (VX,VY) = (5*cos(45deg),5*sin(45deg)) m/s
-            state << 0, 0, 5.0*cos(M_PI/4), 5.0*sin(M_PI/4);
+            state << 0, 0, 5*cos(M_PI_4), 5*sin(M_PI_4);
+
+            cov(0, 0) = INIT_POS_STD * INIT_POS_STD;
+            cov(1, 1) = INIT_POS_STD * INIT_POS_STD;
+            cov(2, 2) = INIT_VEL_STD * INIT_VEL_STD;
+            cov(3, 3) = INIT_VEL_STD * INIT_VEL_STD;
 
             setState(state);
             setCovariance(cov);
@@ -52,8 +57,26 @@ void KalmanFilter::predictionStep(double dt)
         // Hint: You can use the constants: ACCEL_STD
         // ----------------------------------------------------------------------- //
         // ENTER YOUR CODE HERE
+        Matrix4d F = Matrix4d::Zero();;
+        F(0, 0) = 1;
+        F(0, 2) = dt;
+        F(1, 1) = 1;
+        F(1, 3) = dt;
+        F(2, 2) = 1;
+        F(3, 3) = 1;
+        
+        Matrix2d Q = Matrix2d::Zero();
+        Q(0, 0) = ACCEL_STD * ACCEL_STD;
+        Q(1, 1) = ACCEL_STD * ACCEL_STD;
 
+        MatrixXd L = MatrixXd::Zero(4, 2);
+        L(0, 0) = 0.5*dt*dt;
+        L(1, 1) = 0.5*dt*dt;
+        L(2, 0) = dt;
+        L(3, 1) = dt;
 
+        state = F * state;
+        cov = F * cov * F.transpose() + L * Q * L.transpose();
         // ----------------------------------------------------------------------- //
 
         setState(state);
