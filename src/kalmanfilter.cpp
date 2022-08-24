@@ -11,7 +11,7 @@
 
 // -------------------------------------------------- //
 // YOU CAN USE AND MODIFY THESE CONSTANTS HERE
-constexpr bool INIT_ON_FIRST_PREDICTION = true;
+constexpr bool INIT_ON_FIRST_PREDICTION = false;
 constexpr double INIT_POS_STD = 0;
 constexpr double INIT_VEL_STD = 15;
 constexpr double ACCEL_STD = 0.1;
