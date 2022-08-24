@@ -57,13 +57,10 @@ void KalmanFilter::predictionStep(double dt)
         // Hint: You can use the constants: ACCEL_STD
         // ----------------------------------------------------------------------- //
         // ENTER YOUR CODE HERE
-        Matrix4d F = Matrix4d::Zero();;
-        F(0, 0) = 1;
+        Matrix4d F = Matrix4d::Identity();;
         F(0, 2) = dt;
-        F(1, 1) = 1;
         F(1, 3) = dt;
-        F(2, 2) = 1;
-        F(3, 3) = 1;
+
         
         Matrix2d Q = Matrix2d::Zero();
         Q(0, 0) = ACCEL_STD * ACCEL_STD;
