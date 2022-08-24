@@ -97,7 +97,23 @@ void KalmanFilter::handleGPSMeasurement(GPSMeasurement meas)
         // Hint: You can use the constants: GPS_POS_STD
         // ----------------------------------------------------------------------- //
         // ENTER YOUR CODE HERE 
+        Vector2d z = Vector2d();
+        z(0) = meas.x;
+        z(1) = meas.y;
 
+        MatrixXd H = MatrixXd::Zero(2, 4);
+        H(0, 0) = 1;
+        H(1, 1) = 1;
+
+        Matrix2d R = Matrix2d::Identity() * GPS_POS_STD*GPS_POS_STD;
+
+        Vector2d z_hat = H * state;
+        Vector2d y = z - z_hat;
+        MatrixXd S = H * cov * H.transpose() + R;
+        MatrixXd K = cov * H.transpose() * S.inverse();
+
+        state = state + K * y;
+        cov = (Matrix4d::Identity() - K * H) * cov;
 
         // ----------------------------------------------------------------------- //
 
@@ -116,6 +132,13 @@ void KalmanFilter::handleGPSMeasurement(GPSMeasurement meas)
             VectorXd state = Vector4d::Zero();
             MatrixXd cov = Matrix4d::Zero();
 
+            state(0) = meas.x;
+            state(1) = meas.y;
+
+            cov(0,0) = GPS_POS_STD*GPS_POS_STD;
+            cov(1,1) = GPS_POS_STD*GPS_POS_STD;
+            cov(2,2) = INIT_VEL_STD*INIT_VEL_STD;
+            cov(3,3) = INIT_VEL_STD*INIT_VEL_STD;
 
             setState(state);
             setCovariance(cov);
@@ -146,4 +169,3 @@ VehicleState KalmanFilter::getVehicleState()
 void KalmanFilter::predictionStep(GyroMeasurement gyro, double dt){predictionStep(dt);}
 void KalmanFilter::handleLidarMeasurements(const std::vector<LidarMeasurement>& dataset, const BeaconMap& map){}
 void KalmanFilter::handleLidarMeasurement(LidarMeasurement meas, const BeaconMap& map){}
-
