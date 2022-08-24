@@ -60,12 +60,9 @@ void KalmanFilter::predictionStep(double dt)
         Matrix4d F = Matrix4d::Identity();;
         F(0, 2) = dt;
         F(1, 3) = dt;
-
         
-        Matrix2d Q = Matrix2d::Zero();
-        Q(0, 0) = ACCEL_STD * ACCEL_STD;
-        Q(1, 1) = ACCEL_STD * ACCEL_STD;
-
+        Matrix2d Q = Matrix2d::Identity() * ACCEL_STD*ACCEL_STD;
+        
         MatrixXd L = MatrixXd::Zero(4, 2);
         L(0, 0) = 0.5*dt*dt;
         L(1, 1) = 0.5*dt*dt;
