@@ -47,6 +47,50 @@ void KalmanFilter::handleLidarMeasurement(LidarMeasurement meas, const BeaconMap
         if (meas.id != -1 && map_beacon.id != -1)
         {           
             // The map matched beacon positions can be accessed using: map_beacon.x AND map_beacon.y
+            // Get state vector quantities
+            double p_x = state(0);
+            double p_y = state(1);
+            double psi = state(2);
+            double v = state(3);
+
+            // True measurement vector (from sensor)
+            Vector2d z = Vector2d::Zero();
+            z << meas.range, meas.theta;
+
+            // Predicted measurement vector (from measurement model)
+            Vector2d z_hat = Vector2d::Zero();
+            double dx = map_beacon.x - p_x;
+            double dy = map_beacon.y - p_y;
+            double r_hat = sqrt(dx*dx + dy*dy);
+            double theta_hat = wrapAngle(atan2(dy, dx) - psi);
+            z_hat << r_hat, theta_hat;
+
+            // Measurement model sensitivity matrix
+            MatrixXd H = MatrixXd::Zero(2, 4);
+            H(0, 0) = -dx / r_hat;
+            H(0, 1) = -dy / r_hat;
+            H(1, 0) = dy / (r_hat*r_hat);
+            H(1, 1) = -dx / (r_hat*r_hat);
+            H(1, 2) = -1;
+
+            // Measurement model covariance matrix
+            Matrix2d R = Matrix2d::Zero();
+            R(0, 0) = LIDAR_RANGE_STD*LIDAR_RANGE_STD;
+            R(1, 1) = LIDAR_THETA_STD*LIDAR_THETA_STD;
+
+            // Calculate innovation mean and innovation covariance
+            Vector2d innovation = z - z_hat;
+            Matrix2d S = H*cov*H.transpose() + R;
+
+            // Calculate Kalman gain
+            MatrixXd K = cov * H.transpose() * S.inverse();
+            
+            // Wrap the heading innovation
+            innovation(1) = wrapAngle(innovation(1));
+
+            // Update state vector and covariance
+            state = state + K * innovation;
+            cov = (Matrix4d::Identity() - K*H) * cov;
         }
 
         // ----------------------------------------------------------------------- //
@@ -83,7 +127,7 @@ void KalmanFilter::predictionStep(GyroMeasurement gyro, double dt)
         psi = wrapAngle(psi + dt * gyro.psi_dot);
         state << p_x, p_y, psi, v;
 
-        // Calculate Jacobian matrix (Napla)F
+        // Calculate process Jacobian matrix (Napla)F
         Matrix4d F = Matrix4d::Identity();
         F(0, 2) = -dt * v * sin(psi);
         F(0, 3) = dt * cos(psi);
